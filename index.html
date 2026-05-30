@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>让我们一起来花马斯克的钱吧 - 华尔街对赌版</title>
     <style>
         /* ==========================================
@@ -25,7 +25,6 @@
         .time-badge { background-color: #FFCDD2; color: #C62828; padding: 8px 25px; border-radius: 30px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 10px rgba(255, 205, 210, 0.4);}
         .eco-badge { background-color: #E1BEE7; color: #4A148C; padding: 8px 25px; border-radius: 30px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 10px rgba(225, 190, 231, 0.4); transition: all 0.3s;}
         
-        /* 💡 新增：内幕消息/风向标面板 */
         #rumor-box { background: linear-gradient(135deg, #FFF9C4 0%, #FFECB3 100%); padding: 15px 20px; border-radius: 16px; width: 100%; box-sizing: border-box; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); border: 2px dashed #FFCA28; animation: pulseRumor 3s infinite; }
         .rumor-title { font-size: 14px; font-weight: 900; color: #F57F17; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
         .rumor-text { font-size: 18px; font-weight: 800; color: #795548; }
@@ -57,9 +56,44 @@
         .btn-buy:disabled { background-color: #E1F5FE; color: #B3E5FC; cursor: not-allowed; box-shadow: none;}
         .btn-buy.maxed { background-color: #A5D6A7; color: #1B5E20; box-shadow: none;}
         
-        #time-control { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 101; }
-        .btn-next-year { background-color: #FFB74D; color: #E65100; font-size: 20px; font-weight: 900; padding: 16px 40px; border-radius: 40px; box-shadow: 0 6px 20px rgba(255,183,77,0.5); border: 3px solid #FFE0B2; cursor: pointer;}
+        #time-control { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 101; width: auto; }
+        .btn-next-year { background-color: #FFB74D; color: #E65100; font-size: 20px; font-weight: 900; padding: 16px 40px; border-radius: 40px; box-shadow: 0 6px 20px rgba(255,183,77,0.5); border: 3px solid #FFE0B2; cursor: pointer; white-space: nowrap;}
         .btn-next-year:hover { transform: scale(1.05); }
+
+        /* ==========================================
+           🌟 核心新增：移动端专属适配 (媒体查询)
+           当屏幕宽度小于 600px 时，自动执行以下“瘦身”代码
+           ========================================== */
+        @media (max-width: 600px) {
+            body { padding-bottom: 90px; } /* 缩小底部留白 */
+            
+            /* 1. 缩小顶部财报字号和间距 */
+            #header { padding: 10px 5px; border-radius: 0 0 16px 16px; }
+            .stat-title { font-size: 12px; }
+            .stat-value { font-size: 18px; }
+            .profit-badge { font-size: 12px; padding: 3px 8px; }
+            
+            /* 2. 缩小新闻预警卡片 */
+            #status-bar { margin: 10px auto; gap: 10px; }
+            .time-badge, .eco-badge { font-size: 14px; padding: 6px 16px; }
+            .rumor-text, .news-text { font-size: 14px; }
+            .news-item { padding: 12px 15px; }
+
+            /* 3. 极度紧凑的商品卡片 (强制单列展示，缩小所有留白) */
+            #main-container { grid-template-columns: 1fr; gap: 15px; margin: 10px auto; }
+            .card { padding: 15px; border-radius: 16px; }
+            .card-name { font-size: 18px; margin-bottom: 5px; }
+            .card-price { font-size: 16px; margin-bottom: 10px; }
+            
+            /* 4. 操作区紧凑化，防止输入框和按钮挤在一起换行 */
+            .action-area { padding: 8px; gap: 5px; border-radius: 12px;}
+            button { padding: 8px 12px; font-size: 13px; border-radius: 10px; }
+            .qty-input { width: 45px; padding: 6px 2px; font-size: 14px; }
+
+            /* 5. 底部大按钮自适应缩放，绝不超出屏幕边缘 */
+            #time-control { bottom: 15px; width: 90%; max-width: 320px; }
+            .btn-next-year { width: 100%; padding: 12px 0; font-size: 16px; border-radius: 30px; box-sizing: border-box; }
+        }
 
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulseRumor { 0% { box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); } 50% { box-shadow: 0 4px 25px rgba(255, 193, 7, 0.6); } 100% { box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); } }
@@ -119,7 +153,7 @@
         let totalCash = INITIAL_WEALTH;
         let currentYear = 1;
         let currentDisplayIds = []; 
-        let activeRumor = null; // 当前正在挂着的内幕消息
+        let activeRumor = null; 
         
         const ECONOMY_STATES = [
             { id: 'boom', name: '📈 繁荣', buff: 1.15, isGood: true },
@@ -163,16 +197,9 @@
             if (item) item.price = Math.max(1, multiplier > 1 ? Math.ceil(item.price * multiplier) : Math.floor(item.price * multiplier));
         }
 
-        function hasItem(id) {
-            let item = itemsPool.find(i => i.id === id);
-            return item && item.count > 0;
-        }
-
         // ==========================================
         // 2. 预测/内幕消息对赌引擎
         // ==========================================
-        
-        // 我们定义一组“谣言/内幕”，每个内幕包含一个文本，以及明年的两种可能结局（成功 或 失败）
         const rumorMill = [
             {
                 rumorText: "传闻：SpaceX 明年将进行史上最大规模星舰试飞，成败将直接影响航天估值！",
@@ -216,23 +243,17 @@
             }
         ];
 
-        // 随机抽取一条新的内幕消息
         function generateNewRumor() {
-            // 找出那些“即使玩家没买，抽出来也有意义”的商品谣言。
-            // 为了让玩家有动力去买，我们随机抽一个谣言，无论玩家现在有没有这个物品。
             let randomIndex = Math.floor(Math.random() * rumorMill.length);
             activeRumor = rumorMill[randomIndex];
             rumorDisplay.innerText = activeRumor.rumorText;
         }
 
-        // 结算去年的内幕消息
         function resolveActiveRumor() {
             if (!activeRumor) return null;
-
-            // 根据概率抛骰子，决定是好结局还是坏结局
             let rand = Math.random();
             let cumulativeProb = 0;
-            let selectedResolution = activeRumor.resolutions[activeRumor.resolutions.length - 1]; // 兜底
+            let selectedResolution = activeRumor.resolutions[activeRumor.resolutions.length - 1]; 
 
             for (let res of activeRumor.resolutions) {
                 cumulativeProb += res.prob;
@@ -241,11 +262,8 @@
                     break;
                 }
             }
-
-            // 执行结果
             selectedResolution.action();
 
-            // 返回生成的新闻卡片 HTML 供渲染
             let tagsHTML = selectedResolution.impacts.map(imp => {
                 let colorClass = imp.type === 'up' ? 'tag-up' : 'tag-down';
                 return `<span class="impact-tag ${colorClass}">${imp.text}</span>`;
@@ -303,130 +321,4 @@
 
         function refreshShop() {
             currentDisplayIds = [];
-            let availableSpecialItems = [];
-            for (let item of itemsPool) {
-                if (item.isPermanent || item.count > 0) {
-                    currentDisplayIds.push(item.id);
-                } else {
-                    availableSpecialItems.push(item.id);
-                }
-            }
-            availableSpecialItems.sort(() => 0.5 - Math.random());
-            let drawnItems = availableSpecialItems.slice(0, 3); 
-            currentDisplayIds = currentDisplayIds.concat(drawnItems);
-        }
-
-        // ==========================================
-        // 4. 用户交互与页面渲染
-        // ==========================================
-        function getInputValue(id) {
-            let inputEle = document.getElementById(`input-${id}`);
-            let val = parseInt(inputEle.value);
-            return (isNaN(val) || val < 1) ? 1 : val;
-        }
-
-        function triggerFlash(type) {
-            header.classList.remove("flash-red", "flash-green");
-            void header.offsetWidth; 
-            header.classList.add(type === "buy" ? "flash-red" : "flash-green");
-            setTimeout(() => header.classList.remove("flash-red", "flash-green"), 400);
-        }
-
-        function buyItem(id) {
-            let item = itemsPool.find(i => i.id === id);
-            let requestedQty = getInputValue(id);
-            let maxAffordable = Math.floor(totalCash / item.price);
-            let availableSpace = item.maxLimit - item.count;
-            let actualQty = Math.min(requestedQty, maxAffordable, availableSpace);
-
-            if (actualQty > 0) {
-                totalCash -= item.price * actualQty;
-                item.count += actualQty;
-                triggerFlash("buy");
-                calculateFinances(); 
-                render();
-            } else if (maxAffordable === 0) {
-                alert("现金不足！你需要卖出其他资产换取现金，才能参与这次对赌。");
-            }
-        }
-
-        function sellItem(id) {
-            let item = itemsPool.find(i => i.id === id);
-            let requestedQty = getInputValue(id);
-            let actualQty = Math.min(requestedQty, item.count);
-
-            if (actualQty > 0) {
-                totalCash += item.price * actualQty;
-                item.count -= actualQty;
-                triggerFlash("sell");
-                calculateFinances(); 
-                render();
-            }
-        }
-
-        function nextYear() {
-            currentYear += 1;
-            yearDisplay.innerText = currentYear;
-            
-            // 1. 结算去年的大盘
-            updateMacroEconomy(); 
-            let ecoHTML = `
-                <div class="news-item" style="background: #E0F7FA;">
-                    <div class="news-text">大盘环境：当前处于 ${currentEconomy.name} 周期。</div>
-                    <div class="news-tags"><span class="impact-tag ${currentEconomy.isGood ? 'tag-up' : 'tag-down'}">全球资产自然波动 ${Math.round((currentEconomy.buff - 1)*100)}%</span></div>
-                </div>
-            `;
-
-            // 2. 结算去年的内幕预测结果
-            let rumorHTML = resolveActiveRumor();
-            
-            // 将新闻合并显示
-            newsContainer.innerHTML = rumorHTML + ecoHTML;
-
-            // 3. 生成明年的新预告！
-            generateNewRumor();
-
-            // 4. 收尾刷新
-            refreshShop();        
-            calculateFinances();  
-            render();             
-        }
-
-        function render() {
-            let htmlContent = "";
-            for (let id of currentDisplayIds) {
-                let item = itemsPool.find(i => i.id === id);
-                let isMaxed = (item.count >= item.maxLimit);
-                let sellDisabled = (item.count === 0) ? "disabled" : "";
-                let buyDisabled = (totalCash < item.price || isMaxed) ? "disabled" : "";
-                let buyText = isMaxed ? "已达上限" : "购买";
-                let buyClass = isMaxed ? "btn-buy maxed" : "btn-buy";
-                let badgeHtml = !item.isPermanent ? `<div class="card-badge">✨ 限定标的</div>` : "";
-                
-                let holdingsValue = item.count > 0 ? `<div style="font-size: 13px; color: #757575; margin-bottom: 5px;">持有 ${item.count} 份 (估值: <span style="color:#2E7D32; font-weight:bold;">${formatMoney(item.count * item.price)}</span>)</div>` : `<div style="height: 22px;"></div>`;
-
-                htmlContent += `
-                    <div class="card">
-                        ${badgeHtml}
-                        <div class="card-name">${item.name}</div>
-                        <div class="card-price">${formatMoney(item.price)}</div>
-                        ${holdingsValue}
-                        <div class="action-area">
-                            <button class="btn-sell" onclick="sellItem('${item.id}')" ${sellDisabled}>抛售</button>
-                            <input type="number" id="input-${item.id}" class="qty-input" value="1" min="1">
-                            <button class="${buyClass}" onclick="buyItem('${item.id}')" ${buyDisabled}>${buyText}</button>
-                        </div>
-                    </div>
-                `;
-            }
-            container.innerHTML = htmlContent;
-        }
-
-        // 初始化
-        generateNewRumor();
-        refreshShop();
-        calculateFinances();
-        render();
-    </script>
-</body>
-</html>
+            let availableSpecialItems =
