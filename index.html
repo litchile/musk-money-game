@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>让我们一起来花马斯克的钱吧 - 华尔街对赌版</title>
+    <style>
+        /* ==========================================
+           UI/UX 表现层：极简、温暖、Q萌的解压风格
+           ========================================== */
+        body { margin: 0; font-family: 'Nunito', 'Helvetica Neue', Arial, sans-serif; background-color: #FFF8E7; padding-bottom: 120px; color: #5D4037; }
+        
+        #header { position: sticky; top: 0; background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 15px 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); z-index: 100; transition: background-color 0.4s ease; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; }
+        .stats-container { display: flex; justify-content: space-around; max-width: 1000px; margin: 0 auto; align-items: center; }
+        .stat-box { text-align: center; }
+        .stat-title { font-size: 14px; font-weight: bold; color: #888; margin-bottom: 5px; }
+        .stat-value { font-size: 28px; font-weight: 900; color: #4A4A4A; margin: 0; letter-spacing: 1px; transition: color 0.3s; }
+        .profit-badge { font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 12px; display: inline-block; margin-top: 8px; transition: all 0.3s; }
+        .profit-up { background-color: #E8F5E9; color: #2E7D32; }
+        .profit-down { background-color: #FFEBEE; color: #C62828; }
+        .profit-neutral { background-color: #F5F5F5; color: #757575; }
+
+        #status-bar { display: flex; flex-direction: column; align-items: center; max-width: 1000px; margin: 20px auto; padding: 0 15px; gap: 15px;}
+        .status-badges { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
+        .time-badge { background-color: #FFCDD2; color: #C62828; padding: 8px 25px; border-radius: 30px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 10px rgba(255, 205, 210, 0.4);}
+        .eco-badge { background-color: #E1BEE7; color: #4A148C; padding: 8px 25px; border-radius: 30px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 10px rgba(225, 190, 231, 0.4); transition: all 0.3s;}
+        
+        /* 💡 新增：内幕消息/风向标面板 */
+        #rumor-box { background: linear-gradient(135deg, #FFF9C4 0%, #FFECB3 100%); padding: 15px 20px; border-radius: 16px; width: 100%; box-sizing: border-box; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); border: 2px dashed #FFCA28; animation: pulseRumor 3s infinite; }
+        .rumor-title { font-size: 14px; font-weight: 900; color: #F57F17; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
+        .rumor-text { font-size: 18px; font-weight: 800; color: #795548; }
+
+        #news-container { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+        .news-item { background: #F3E5F5; padding: 15px 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(225, 190, 231, 0.5); animation: fadeInDown 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) backwards; }
+        .news-text { color: #4A148C; font-weight: 800; font-size: 16px; margin-bottom: 10px; line-height: 1.4;}
+        .news-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .impact-tag { font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 10px; display: inline-flex; align-items: center;}
+        .tag-up { background-color: #E8F5E9; color: #2E7D32; border: 1px solid #C8E6C9;}
+        .tag-down { background-color: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2;}
+        .tag-neutral { background-color: #EEEEEE; color: #616161; border: 1px solid #E0E0E0;}
+
+        #main-container { max-width: 1000px; margin: 20px auto; padding: 0 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .card { background-color: #ffffff; border-radius: 24px; padding: 25px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.04); display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+        .card-name { font-size: 20px; font-weight: 800; margin-bottom: 10px; color: #3E2723;}
+        .card-price { font-size: 18px; color: #2E7D32; margin-bottom: 15px; font-weight: 900; }
+        .card-badge { font-size: 12px; padding: 4px 10px; border-radius: 12px; background-color: #FFF9C4; color: #F57F17; display: inline-block; margin: 0 auto 15px auto; width: fit-content; font-weight: bold;}
+        .action-area { display: flex; justify-content: space-between; align-items: center; margin-top: auto; background-color: #F5F5F5; padding: 12px; border-radius: 18px; gap: 10px; }
+        .qty-input { width: 60px; text-align: center; border: 2px solid #E0E0E0; border-radius: 12px; font-size: 16px; font-weight: bold; padding: 8px 5px; outline: none; color: #5D4037; }
+        .qty-input:focus { border-color: #81D4FA; }
+        
+        button { border: none; padding: 10px 16px; font-size: 14px; border-radius: 14px; cursor: pointer; font-weight: 800; transition: all 0.1s; }
+        button:active { transform: scale(0.92); }
+        .btn-sell { background-color: #EEEEEE; color: #757575; }
+        .btn-sell:disabled { background-color: #F5F5F5; color: #BDBDBD; cursor: not-allowed; }
+        .btn-buy { background-color: #81D4FA; color: #01579B; box-shadow: 0 4px 10px rgba(129, 212, 250, 0.4);}
+        .btn-buy:disabled { background-color: #E1F5FE; color: #B3E5FC; cursor: not-allowed; box-shadow: none;}
+        .btn-buy.maxed { background-color: #A5D6A7; color: #1B5E20; box-shadow: none;}
+        
+        #time-control { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 101; }
+        .btn-next-year { background-color: #FFB74D; color: #E65100; font-size: 20px; font-weight: 900; padding: 16px 40px; border-radius: 40px; box-shadow: 0 6px 20px rgba(255,183,77,0.5); border: 3px solid #FFE0B2; cursor: pointer;}
+        .btn-next-year:hover { transform: scale(1.05); }
+
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseRumor { 0% { box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); } 50% { box-shadow: 0 4px 25px rgba(255, 193, 7, 0.6); } 100% { box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); } }
+        .flash-red { background-color: #FFCDD2 !important; }
+        .flash-green { background-color: #C8E6C9 !important; }
+
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-title">可用现金 (Cash)</div>
+                <h2 class="stat-value" id="cash-display">$250,000,000,000</h2>
+            </div>
+            <div style="width: 2px; height: 50px; background-color: #EEEEEE;"></div>
+            <div class="stat-box">
+                <div class="stat-title">总资产 (Net Worth)</div>
+                <h2 class="stat-value" id="networth-display">$250,000,000,000</h2>
+                <div class="profit-badge profit-neutral" id="profit-display">总盈亏: $0</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="status-bar">
+        <div class="status-badges">
+            <div class="time-badge">⏳ 第 <span id="year-display">1</span> 年</div>
+            <div class="eco-badge" id="eco-display">大盘：⚖️ 平稳</div>
+        </div>
+        
+        <div id="rumor-box">
+            <div class="rumor-title">🔮 商业内幕预警 (明年揭晓)</div>
+            <div class="rumor-text" id="rumor-display">正在搜集市场情报...</div>
+        </div>
+
+        <div id="news-container">
+            <div class="news-item">
+                <div class="news-text">欢迎来到华尔街！请注意上方的“商业内幕预警”，提前买入或抛售资产进行对赌！</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-container"></div>
+
+    <div id="time-control">
+        <button class="btn-next-year" onclick="nextYear()">对赌完毕，进入下一年 🚀</button>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. 基础数据
+        // ==========================================
+        const INITIAL_WEALTH = 250000000000; 
+        let totalCash = INITIAL_WEALTH;
+        let currentYear = 1;
+        let currentDisplayIds = []; 
+        let activeRumor = null; // 当前正在挂着的内幕消息
+        
+        const ECONOMY_STATES = [
+            { id: 'boom', name: '📈 繁荣', buff: 1.15, isGood: true },
+            { id: 'stable', name: '⚖️ 平稳', buff: 1.0, isGood: true },
+            { id: 'recession', name: '📉 衰退', buff: 0.85, isGood: false },
+            { id: 'crisis', name: '💥 危机', buff: 0.6, isGood: false }
+        ];
+        let currentEconomy = ECONOMY_STATES[1]; 
+
+        let itemsPool = [
+            { id: "blue_v", name: "推特蓝 V 认证 🐦", price: 8, count: 0, isPermanent: true, maxLimit: Infinity },
+            { id: "burger", name: "巨无霸套餐 🍔", price: 8, count: 0, isPermanent: true, maxLimit: Infinity },
+            { id: "doge", name: "1万枚狗狗币 🐕", price: 1500, count: 0, isPermanent: true, maxLimit: Infinity },
+            { id: "optimus", name: "Optimus 机器人 🤖", price: 20000, count: 0, isPermanent: true, maxLimit: Infinity },
+            { id: "cybertruck", name: "特斯拉皮卡 🚙", price: 80000, count: 0, isPermanent: true, maxLimit: Infinity },
+            { id: "falcon9", name: "猎鹰 9 号火箭 🚀", price: 67000000, count: 0, isPermanent: true, maxLimit: Infinity },
+            { id: "neuralink", name: "脑机接口10%股份 🧠", price: 500000000, count: 0, isPermanent: false, maxLimit: 5 },
+            { id: "nba", name: "NBA 球队 🏀", price: 3000000000, count: 0, isPermanent: false, maxLimit: 1 },
+            { id: "twitter", name: "X/Twitter 平台 ✖️", price: 44000000000, count: 0, isPermanent: false, maxLimit: 1 },
+            { id: "mars", name: "火星初建计划 🪐", price: 100000000000, count: 0, isPermanent: false, maxLimit: 1 }
+        ];
+
+        const cashDisplay = document.getElementById("cash-display");
+        const networthDisplay = document.getElementById("networth-display");
+        const profitDisplay = document.getElementById("profit-display");
+        const container = document.getElementById("main-container");
+        const yearDisplay = document.getElementById("year-display");
+        const ecoDisplay = document.getElementById("eco-display");
+        const newsContainer = document.getElementById("news-container");
+        const rumorDisplay = document.getElementById("rumor-display");
+        const header = document.getElementById("header");
+
+        function formatMoney(amount) { 
+            let absAmount = Math.abs(amount);
+            let formatted = "$" + absAmount.toLocaleString('en-US'); 
+            return amount < 0 ? "-" + formatted : formatted;
+        }
+
+        function modifyPrice(id, multiplier) {
+            let item = itemsPool.find(i => i.id === id);
+            if (item) item.price = Math.max(1, multiplier > 1 ? Math.ceil(item.price * multiplier) : Math.floor(item.price * multiplier));
+        }
+
+        function hasItem(id) {
+            let item = itemsPool.find(i => i.id === id);
+            return item && item.count > 0;
+        }
+
+        // ==========================================
+        // 2. 预测/内幕消息对赌引擎
+        // ==========================================
+        
+        // 我们定义一组“谣言/内幕”，每个内幕包含一个文本，以及明年的两种可能结局（成功 或 失败）
+        const rumorMill = [
+            {
+                rumorText: "传闻：SpaceX 明年将进行史上最大规模星舰试飞，成败将直接影响航天估值！",
+                targetItem: 'falcon9',
+                resolutions: [
+                    { prob: 0.6, text: "🚀 完美！星舰试飞成功并回收，航天时代到来！", impacts: [{ type: 'up', text: '猎鹰火箭 📈 +150%' }, { type: 'up', text: '火星计划 📈 +50%' }], action: () => { modifyPrice('falcon9', 2.5); modifyPrice('mars', 1.5); } },
+                    { prob: 0.4, text: "💥 灾难！星舰在发射台发生严重爆炸，航天系资产雪崩。", impacts: [{ type: 'down', text: '猎鹰火箭 📉 -60%' }, { type: 'down', text: '火星计划 📉 -30%' }], action: () => { modifyPrice('falcon9', 0.4); modifyPrice('mars', 0.7); } }
+                ]
+            },
+            {
+                rumorText: "内幕：Neuralink 明年可能获批最新人体实验许可，一旦通过将颠覆医疗界。",
+                targetItem: 'neuralink',
+                resolutions: [
+                    { prob: 0.5, text: "🧠 奇迹突破！脑机接口实验大获成功，患者重获行动能力！", impacts: [{ type: 'up', text: '脑机接口 📈 +200%' }], action: () => modifyPrice('neuralink', 3.0) },
+                    { prob: 0.5, text: "🐒 丑闻爆发！实验被指控存在严重违规，许可被紧急撤回。", impacts: [{ type: 'down', text: '脑机接口 📉 -70%' }], action: () => modifyPrice('neuralink', 0.3) }
+                ]
+            },
+            {
+                rumorText: "风声：马斯克最近密集接触币圈大佬，明年可能要在推特上搞大动作。",
+                targetItem: 'doge',
+                resolutions: [
+                    { prob: 0.5, text: "🐕 史诗拉盘！马斯克宣布推特全面支持狗狗币打赏！", impacts: [{ type: 'up', text: '狗狗币 📈 +300%' }], action: () => modifyPrice('doge', 4.0) },
+                    { prob: 0.5, text: "🤡 闹剧收场！马斯克被曝遭币圈大佬爽约，什么都没发生，散户恐慌抛售。", impacts: [{ type: 'down', text: '狗狗币 📉 -50%' }], action: () => modifyPrice('doge', 0.5) }
+                ]
+            },
+            {
+                rumorText: "产业链：特斯拉下令供应商全力备货，传说明年将公布“终极智能体”。",
+                targetItem: 'cybertruck',
+                resolutions: [
+                    { prob: 0.7, text: "🤖 震撼发布！Optimus 结合 FSD 展现出不可思议的生产力，华尔街疯狂！", impacts: [{ type: 'up', text: 'Optimus 📈 +100%' }, { type: 'up', text: '特斯拉皮卡 📈 +80%' }], action: () => { modifyPrice('optimus', 2.0); modifyPrice('cybertruck', 1.8); } },
+                    { prob: 0.3, text: "🤦‍♂️ 产能地狱重现！供应链全面崩盘，新产品无限期推迟。", impacts: [{ type: 'down', text: '特斯拉全系 📉 -40%' }], action: () => { modifyPrice('optimus', 0.6); modifyPrice('cybertruck', 0.6); } }
+                ]
+            },
+            {
+                rumorText: "体育头条：巨资收购超级球星，你名下的 NBA 球队明年志在夺取总冠军！",
+                targetItem: 'nba',
+                resolutions: [
+                    { prob: 0.4, text: "🏆 夺冠狂欢！球队以摧枯拉朽之势拿下总冠军，市值飙升！", impacts: [{ type: 'up', text: 'NBA球队 📈 +150%' }], action: () => modifyPrice('nba', 2.5) },
+                    { prob: 0.6, text: "🚑 诅咒再临！超级球星赛季初重伤报销，沦为联盟笑柄。", impacts: [{ type: 'down', text: 'NBA球队 📉 -50%' }], action: () => modifyPrice('nba', 0.5) }
+                ]
+            }
+        ];
+
+        // 随机抽取一条新的内幕消息
+        function generateNewRumor() {
+            // 找出那些“即使玩家没买，抽出来也有意义”的商品谣言。
+            // 为了让玩家有动力去买，我们随机抽一个谣言，无论玩家现在有没有这个物品。
+            let randomIndex = Math.floor(Math.random() * rumorMill.length);
+            activeRumor = rumorMill[randomIndex];
+            rumorDisplay.innerText = activeRumor.rumorText;
+        }
+
+        // 结算去年的内幕消息
+        function resolveActiveRumor() {
+            if (!activeRumor) return null;
+
+            // 根据概率抛骰子，决定是好结局还是坏结局
+            let rand = Math.random();
+            let cumulativeProb = 0;
+            let selectedResolution = activeRumor.resolutions[activeRumor.resolutions.length - 1]; // 兜底
+
+            for (let res of activeRumor.resolutions) {
+                cumulativeProb += res.prob;
+                if (rand <= cumulativeProb) {
+                    selectedResolution = res;
+                    break;
+                }
+            }
+
+            // 执行结果
+            selectedResolution.action();
+
+            // 返回生成的新闻卡片 HTML 供渲染
+            let tagsHTML = selectedResolution.impacts.map(imp => {
+                let colorClass = imp.type === 'up' ? 'tag-up' : 'tag-down';
+                return `<span class="impact-tag ${colorClass}">${imp.text}</span>`;
+            }).join('');
+
+            return `
+                <div class="news-item" style="border-left: 5px solid #FFC107;">
+                    <div style="font-size: 12px; color: #FF9800; font-weight: bold; margin-bottom: 4px;">内幕验证结果</div>
+                    <div class="news-text">${selectedResolution.text}</div>
+                    <div class="news-tags">${tagsHTML}</div>
+                </div>
+            `;
+        }
+
+        // ==========================================
+        // 3. 基础宏观循环计算
+        // ==========================================
+        function calculateFinances() {
+            let totalAssetValue = 0;
+            for (let item of itemsPool) { totalAssetValue += item.count * item.price; }
+            let netWorth = totalCash + totalAssetValue;
+            let profit = netWorth - INITIAL_WEALTH;
+            
+            cashDisplay.innerText = formatMoney(totalCash);
+            networthDisplay.innerText = formatMoney(netWorth);
+            
+            if (profit > 0) {
+                profitDisplay.innerText = "总盈亏: +" + formatMoney(profit);
+                profitDisplay.className = "profit-badge profit-up";
+                networthDisplay.style.color = "#2E7D32"; 
+            } else if (profit < 0) {
+                profitDisplay.innerText = "总盈亏: " + formatMoney(profit);
+                profitDisplay.className = "profit-badge profit-down";
+                networthDisplay.style.color = "#C62828"; 
+            } else {
+                profitDisplay.innerText = "总盈亏: $0";
+                profitDisplay.className = "profit-badge profit-neutral";
+                networthDisplay.style.color = "#4A4A4A";
+            }
+        }
+
+        function updateMacroEconomy() {
+            if (Math.random() < 0.25) {
+                currentEconomy = ECONOMY_STATES[Math.floor(Math.random() * ECONOMY_STATES.length)];
+                ecoDisplay.style.backgroundColor = currentEconomy.isGood ? "#E8F5E9" : "#FFEBEE";
+                ecoDisplay.style.color = currentEconomy.isGood ? "#2E7D32" : "#C62828";
+            }
+            ecoDisplay.innerText = `大盘：${currentEconomy.name}`;
+
+            itemsPool.forEach(item => {
+                let buff = (item.id === 'burger' && currentEconomy.id === 'crisis') ? 1.2 : currentEconomy.buff;
+                item.price = Math.max(1, Math.floor(item.price * buff));
+            });
+        }
+
+        function refreshShop() {
+            currentDisplayIds = [];
+            let availableSpecialItems = [];
+            for (let item of itemsPool) {
+                if (item.isPermanent || item.count > 0) {
+                    currentDisplayIds.push(item.id);
+                } else {
+                    availableSpecialItems.push(item.id);
+                }
+            }
+            availableSpecialItems.sort(() => 0.5 - Math.random());
+            let drawnItems = availableSpecialItems.slice(0, 3); 
+            currentDisplayIds = currentDisplayIds.concat(drawnItems);
+        }
+
+        // ==========================================
+        // 4. 用户交互与页面渲染
+        // ==========================================
+        function getInputValue(id) {
+            let inputEle = document.getElementById(`input-${id}`);
+            let val = parseInt(inputEle.value);
+            return (isNaN(val) || val < 1) ? 1 : val;
+        }
+
+        function triggerFlash(type) {
+            header.classList.remove("flash-red", "flash-green");
+            void header.offsetWidth; 
+            header.classList.add(type === "buy" ? "flash-red" : "flash-green");
+            setTimeout(() => header.classList.remove("flash-red", "flash-green"), 400);
+        }
+
+        function buyItem(id) {
+            let item = itemsPool.find(i => i.id === id);
+            let requestedQty = getInputValue(id);
+            let maxAffordable = Math.floor(totalCash / item.price);
+            let availableSpace = item.maxLimit - item.count;
+            let actualQty = Math.min(requestedQty, maxAffordable, availableSpace);
+
+            if (actualQty > 0) {
+                totalCash -= item.price * actualQty;
+                item.count += actualQty;
+                triggerFlash("buy");
+                calculateFinances(); 
+                render();
+            } else if (maxAffordable === 0) {
+                alert("现金不足！你需要卖出其他资产换取现金，才能参与这次对赌。");
+            }
+        }
+
+        function sellItem(id) {
+            let item = itemsPool.find(i => i.id === id);
+            let requestedQty = getInputValue(id);
+            let actualQty = Math.min(requestedQty, item.count);
+
+            if (actualQty > 0) {
+                totalCash += item.price * actualQty;
+                item.count -= actualQty;
+                triggerFlash("sell");
+                calculateFinances(); 
+                render();
+            }
+        }
+
+        function nextYear() {
+            currentYear += 1;
+            yearDisplay.innerText = currentYear;
+            
+            // 1. 结算去年的大盘
+            updateMacroEconomy(); 
+            let ecoHTML = `
+                <div class="news-item" style="background: #E0F7FA;">
+                    <div class="news-text">大盘环境：当前处于 ${currentEconomy.name} 周期。</div>
+                    <div class="news-tags"><span class="impact-tag ${currentEconomy.isGood ? 'tag-up' : 'tag-down'}">全球资产自然波动 ${Math.round((currentEconomy.buff - 1)*100)}%</span></div>
+                </div>
+            `;
+
+            // 2. 结算去年的内幕预测结果
+            let rumorHTML = resolveActiveRumor();
+            
+            // 将新闻合并显示
+            newsContainer.innerHTML = rumorHTML + ecoHTML;
+
+            // 3. 生成明年的新预告！
+            generateNewRumor();
+
+            // 4. 收尾刷新
+            refreshShop();        
+            calculateFinances();  
+            render();             
+        }
+
+        function render() {
+            let htmlContent = "";
+            for (let id of currentDisplayIds) {
+                let item = itemsPool.find(i => i.id === id);
+                let isMaxed = (item.count >= item.maxLimit);
+                let sellDisabled = (item.count === 0) ? "disabled" : "";
+                let buyDisabled = (totalCash < item.price || isMaxed) ? "disabled" : "";
+                let buyText = isMaxed ? "已达上限" : "购买";
+                let buyClass = isMaxed ? "btn-buy maxed" : "btn-buy";
+                let badgeHtml = !item.isPermanent ? `<div class="card-badge">✨ 限定标的</div>` : "";
+                
+                let holdingsValue = item.count > 0 ? `<div style="font-size: 13px; color: #757575; margin-bottom: 5px;">持有 ${item.count} 份 (估值: <span style="color:#2E7D32; font-weight:bold;">${formatMoney(item.count * item.price)}</span>)</div>` : `<div style="height: 22px;"></div>`;
+
+                htmlContent += `
+                    <div class="card">
+                        ${badgeHtml}
+                        <div class="card-name">${item.name}</div>
+                        <div class="card-price">${formatMoney(item.price)}</div>
+                        ${holdingsValue}
+                        <div class="action-area">
+                            <button class="btn-sell" onclick="sellItem('${item.id}')" ${sellDisabled}>抛售</button>
+                            <input type="number" id="input-${item.id}" class="qty-input" value="1" min="1">
+                            <button class="${buyClass}" onclick="buyItem('${item.id}')" ${buyDisabled}>${buyText}</button>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = htmlContent;
+        }
+
+        // 初始化
+        generateNewRumor();
+        refreshShop();
+        calculateFinances();
+        render();
+    </script>
+</body>
+</html>
