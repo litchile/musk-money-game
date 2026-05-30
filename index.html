@@ -8,16 +8,15 @@
         /* ==========================================
            UI/UX 表现层：极简、温暖、Q萌的解压风格
            ========================================== */
-        /* 强制所有元素的边距向内挤压，绝不撑破屏幕 */
         * { box-sizing: border-box; }
 
         body { 
             margin: 0; 
             font-family: 'Nunito', 'Helvetica Neue', Arial, sans-serif; 
-            background-color: #FFF8E7; /* 温暖奶油底色 */
-            padding-bottom: 150px; /* 底部留出巨大安全区，防止大按钮挡住商品 */
+            background-color: #FFF8E7; 
+            padding-bottom: 150px; 
             color: #5D4037; 
-            overflow-x: hidden; /* 彻底封杀左右滑动的可能性 */
+            overflow-x: hidden; 
         }
 
         /* 顶部财报区 */
@@ -32,9 +31,9 @@
             transition: background-color 0.4s ease;
         }
         .stats-container { display: flex; justify-content: space-around; max-width: 1000px; margin: 0 auto; align-items: center; }
-        .stat-box { text-align: center; flex: 1; }
+        .stat-box { text-align: center; flex: 1; overflow: hidden; padding: 0 5px; }
         .stat-title { font-size: 14px; font-weight: bold; color: #888; margin-bottom: 5px; }
-        .stat-value { font-size: 24px; font-weight: 900; color: #4A4A4A; margin: 0; letter-spacing: 1px; transition: color 0.3s; }
+        .stat-value { font-size: 24px; font-weight: 900; color: #4A4A4A; margin: 0; letter-spacing: 1px; transition: color 0.3s; white-space: nowrap; }
         .profit-badge { font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 12px; display: inline-block; margin-top: 8px; transition: all 0.3s;}
         .profit-up { background-color: #E8F5E9; color: #2E7D32; }
         .profit-down { background-color: #FFEBEE; color: #C62828; }
@@ -97,12 +96,47 @@
         .btn-next-year { width: 100%; background-color: #FFB74D; color: #E65100; font-size: 18px; font-weight: 900; padding: 16px 0; border-radius: 30px; box-shadow: 0 6px 20px rgba(255,183,77,0.4); border: 3px solid #FFE0B2; cursor: pointer; white-space: nowrap;}
         .btn-next-year:hover { transform: scale(1.05); }
 
-        /* 极致响应式适配 */
+        /* ==========================================
+           🌟 核心升级：移动端专属双列适配
+           ========================================== */
+        @media (max-width: 600px) {
+            body { padding-bottom: 90px; } 
+            
+            /* 1. 彻底缩小顶部财报的字号，防止长数字重叠 */
+            #header { padding: 10px 5px; border-radius: 0 0 16px 16px; }
+            .stat-title { font-size: 11px; margin-bottom: 2px;}
+            .stat-value { font-size: 14px; letter-spacing: 0; } 
+            .profit-badge { font-size: 11px; padding: 2px 6px; margin-top: 4px; }
+            
+            /* 2. 缩小新闻和徽章 */
+            #status-bar { margin: 10px auto; gap: 10px; }
+            .time-badge, .eco-badge { font-size: 13px; padding: 6px 12px; }
+            .rumor-text, .news-text { font-size: 13px; }
+            .news-item { padding: 12px 15px; }
+
+            /* 3. 核心修复：手机端一行展示两个商品卡片 */
+            #main-container { grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px auto; padding: 0 10px; }
+            .card { padding: 12px 8px; border-radius: 16px; } 
+            .card-badge { font-size: 10px; padding: 2px 6px; margin-bottom: 6px; }
+            .card-name { font-size: 14px; margin-bottom: 4px; }
+            .card-price { font-size: 13px; margin-bottom: 8px; }
+            
+            /* 4. 由于卡片变窄，操作区重构为“上下叠放”弹性排版 */
+            .action-area { padding: 8px; gap: 4px; border-radius: 12px; flex-wrap: wrap; }
+            .qty-input { width: 100%; padding: 4px 2px; font-size: 14px; border-radius: 8px; margin-bottom: 2px; }
+            .btn-sell, .btn-buy { flex: 1; padding: 6px 0; font-size: 12px; border-radius: 8px; text-align: center; }
+
+            /* 5. 底部按钮自适应 */
+            #time-control { bottom: 15px; width: 90%; max-width: 320px; }
+            .btn-next-year { width: 100%; padding: 12px 0; font-size: 16px; border-radius: 30px; }
+        }
+
+        /* 针对极小屏幕手机（如 iPhone SE 等）做终极防爆压缩 */
         @media (max-width: 380px) {
-            .stat-value { font-size: 18px; }
-            .action-area { padding: 8px 5px; }
-            button { padding: 8px 10px; font-size: 13px; }
-            .qty-input { width: 40px; }
+            .stat-value { font-size: 12px; }
+            .card-name { font-size: 12px; }
+            .card-price { font-size: 11px; }
+            .btn-sell, .btn-buy { font-size: 11px; padding: 4px 0; }
         }
 
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -110,7 +144,6 @@
         .flash-red { background-color: #FFCDD2 !important; }
         .flash-green { background-color: #C8E6C9 !important; }
 
-        /* 隐藏数字输入框箭头 */
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
     </style>
@@ -123,7 +156,7 @@
                 <div class="stat-title">可用现金 (Cash)</div>
                 <h2 class="stat-value" id="cash-display">$250,000,000,000</h2>
             </div>
-            <div style="width: 2px; height: 50px; background-color: #EEEEEE;"></div>
+            <div style="width: 2px; height: 40px; background-color: #EEEEEE;"></div>
             <div class="stat-box">
                 <div class="stat-title">总资产 (Net Worth)</div>
                 <h2 class="stat-value" id="networth-display">$250,000,000,000</h2>
@@ -413,7 +446,6 @@
             calculateFinances();  
             render();             
             
-            // 自动滚回顶部查看对赌结果
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -424,11 +456,11 @@
                 let isMaxed = (item.count >= item.maxLimit);
                 let sellDisabled = (item.count === 0) ? "disabled" : "";
                 let buyDisabled = (totalCash < item.price || isMaxed) ? "disabled" : "";
-                let buyText = isMaxed ? "已达上限" : "购买";
+                let buyText = isMaxed ? "已满" : "购买";
                 let buyClass = isMaxed ? "btn-buy maxed" : "btn-buy";
-                let badgeHtml = !item.isPermanent ? `<div class="card-badge">✨ 限定标的</div>` : "";
+                let badgeHtml = !item.isPermanent ? `<div class="card-badge">✨ 限定</div>` : "";
                 
-                let holdingsValue = item.count > 0 ? `<div style="font-size: 12px; color: #757575; margin-bottom: 5px;">持有 ${item.count} 份 (估值: <span style="color:#2E7D32; font-weight:bold;">${formatMoney(item.count * item.price)}</span>)</div>` : `<div style="height: 20px;"></div>`;
+                let holdingsValue = item.count > 0 ? `<div style="font-size: 11px; color: #757575; margin-bottom: 5px;">持有 ${item.count} 份 (估值: <span style="color:#2E7D32; font-weight:bold;">${formatMoney(item.count * item.price)}</span>)</div>` : `<div style="height: 18px;"></div>`;
 
                 htmlContent += `
                     <div class="card">
@@ -437,8 +469,8 @@
                         <div class="card-price">${formatMoney(item.price)}</div>
                         ${holdingsValue}
                         <div class="action-area">
-                            <button class="btn-sell" onclick="sellItem('${item.id}')" ${sellDisabled}>抛售</button>
                             <input type="number" id="input-${item.id}" class="qty-input" value="1" min="1">
+                            <button class="btn-sell" onclick="sellItem('${item.id}')" ${sellDisabled}>抛售</button>
                             <button class="${buyClass}" onclick="buyItem('${item.id}')" ${buyDisabled}>${buyText}</button>
                         </div>
                     </div>
